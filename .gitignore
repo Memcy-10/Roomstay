@@ -1,0 +1,55 @@
+# Keep only the application services in the repository
+/*
+!/.gitignore
+!/frontend/
+!/frontend/**
+!/backend/
+!/backend/**
+
+# Dependencies and local Python environments
+node_modules/
+.venv/
+venv/
+backend/venv/
+
+# Build and coverage output
+dist/
+frontend/dist/
+coverage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Runtime logs and local databases
+*.log
+*.sqlite
+*.sqlite3
+
+# Uploaded/generated files
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# IDE and operating-system files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
