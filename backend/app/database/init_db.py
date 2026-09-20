@@ -32,7 +32,7 @@ def main():
     Base.metadata.create_all(bind=engine)
     print("Tablas creadas/verificadas con Base.metadata.create_all.")
 
-    init_sql_path = Path(__file__).resolve().parent / "init.sql"
+    init_sql_path = Path(__file__).resolve().parents[3] / "database" / "init.sql"
     with open(init_sql_path, "r", encoding="utf-8") as f:
         sql_content = f.read()
 

@@ -5,6 +5,8 @@
 !/frontend/**
 !/backend/
 !/backend/**
+!/database/
+!/database/**
 
 # Dependencies and local Python environments
 node_modules/
