@@ -11,6 +11,7 @@ from app.models.user import User
 from app.models.room import Room
 from app.models.reservation import Reservation, ReservationStatus
 from app.models.sale import Sale, SaleDetail, SaleStatus
+from app.models.invoice import Invoice, InvoiceDetail, InvoiceStatus
 from app.schemas.sale import SaleCreate, SaleStatusUpdate, SaleOut, SaleDetailOut
 
 router = APIRouter(prefix="/sales")
@@ -30,11 +31,12 @@ def generate_sale_number(db: Session) -> str:
 
 
 def sale_to_out(sale: Sale, user: Optional[User] = None, host: Optional[User] = None,
-                room_map: Optional[dict] = None, include_details: bool = True) -> SaleOut:
-    if user is None:
-        user = db.query(User).filter(User.id == sale.userId).first() if 'db' in globals() else None
-    if host is None and sale.hostId:
-        host = db.query(User).filter(User.id == sale.hostId).first() if 'db' in globals() else None
+                room_map: Optional[dict] = None, include_details: bool = True,
+                db: Optional[Session] = None) -> SaleOut:
+    if user is None and db is not None:
+        user = db.query(User).filter(User.id == sale.userId).first()
+    if host is None and sale.hostId and db is not None:
+        host = db.query(User).filter(User.id == sale.hostId).first()
 
     details_out = None
     if include_details and sale.details:
@@ -141,7 +143,7 @@ def list_sales(
         seen.add(s.id)
         u = users_map.get(s.userId)
         h = users_map.get(s.hostId)
-        result.append(sale_to_out(s, user=u, host=h, room_map=room_map).model_dump())
+        result.append(sale_to_out(s, user=u, host=h, room_map=room_map, db=db).model_dump())
 
     return success_response(
         data={"ventas": result, "total": len(result)},
@@ -274,62 +276,106 @@ def create_sale(
     )
 
 
+@router.post("/pay-reservation/{reservation_id}")
 @router.post("/from-reservation/{reservation_id}")
-def create_sale_from_reservation(
+def pay_reservation(
     reservation_id: int,
-    metodoPago: str = "transferencia",
-    current_user: User = Depends(require_host_or_admin),
+    metodoPago: str = Query("tarjeta"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    from app.routers.invoices import generate_invoice_number, invoice_to_out
+
     reserva = db.query(Reservation).filter(Reservation.id == reservation_id).first()
     if not reserva:
         raise HTTPException(status_code=404, detail="Reservación no encontrada")
 
-    existing = db.query(Sale).filter(Sale.reservationId == reservation_id, Sale.estado != SaleStatus.cancelada).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="Ya existe una venta para esta reservación")
-
-    if current_user.role == "host":
-        room = db.query(Room).filter(Room.id == reserva.habitacionId).first()
-        if not room or room.hostId != current_user.id:
-            raise HTTPException(status_code=403, detail="No autorizado")
-
     room = db.query(Room).filter(Room.id == reserva.habitacionId).first()
-    total_sale = float(reserva.total)
 
-    num_venta = generate_sale_number(db)
+    is_owner = reserva.userId == current_user.id
+    is_host = room is not None and room.hostId == current_user.id
+    is_admin = current_user.role == "admin"
 
-    sale = Sale(
-        numeroVenta=num_venta, userId=reserva.userId, reservationId=reserva.id,
-        hostId=room.hostId if room else None, fechaVenta=date.today(),
-        subTotal=total_sale, descuento=0, impuestos=0, total=total_sale,
-        metodoPago=metodoPago, estado=SaleStatus.completada,
-        observaciones=f"Venta generada desde reservación #{reserva.id}",
-        createdBy=current_user.id
-    )
-    db.add(sale)
+    if not (is_owner or is_host or is_admin):
+        raise HTTPException(status_code=403, detail="No autorizado para procesar el pago de esta reservación")
+
+    existing_sale = db.query(Sale).filter(Sale.reservationId == reservation_id, Sale.estado != SaleStatus.cancelada).first()
+
+    if existing_sale:
+        sale = existing_sale
+    else:
+        num_venta = generate_sale_number(db)
+        total_sale = float(reserva.total)
+
+        sale = Sale(
+            numeroVenta=num_venta, userId=reserva.userId, reservationId=reserva.id,
+            hostId=room.hostId if room else None, fechaVenta=date.today(),
+            subTotal=total_sale, descuento=0, impuestos=0, total=total_sale,
+            metodoPago=metodoPago, estado=SaleStatus.completada,
+            observaciones=f"Pago realizado mediante {metodoPago} para reservación #{reserva.id}",
+            createdBy=current_user.id
+        )
+        db.add(sale)
+        db.flush()
+
+        desc = f"Estadía en {room.titulo}" if room else "Servicio de hospedaje"
+        detail = SaleDetail(
+            saleId=sale.id, habitacionId=reserva.habitacionId, descripcion=desc,
+            tipo="habitacion", cantidad=reserva.totalNoches,
+            precioUnitario=float(reserva.precioNoche), descuento=0, impuesto=0,
+            subtotal=float(reserva.total), total=float(reserva.total)
+        )
+        db.add(detail)
+
+    reserva.estado = ReservationStatus.pagada
     db.flush()
 
-    desc = f"Estadía en {room.titulo}" if room else "Servicio de hospedaje"
-    detail = SaleDetail(
-        saleId=sale.id, habitacionId=reserva.habitacionId, descripcion=desc,
-        tipo="habitacion", cantidad=reserva.totalNoches,
-        precioUnitario=float(reserva.precioNoche), descuento=0, impuesto=0,
-        subtotal=float(reserva.total), total=float(reserva.total)
-    )
-    db.add(detail)
+    existing_invoice = db.query(Invoice).filter(Invoice.saleId == sale.id, Invoice.estado != InvoiceStatus.anulada).first()
+    if not existing_invoice:
+        num_factura = generate_invoice_number(db)
+        invoice = Invoice(
+            numeroFactura=num_factura,
+            saleId=sale.id,
+            userId=reserva.userId,
+            fechaEmision=date.today(),
+            fechaVencimiento=date.today() + timedelta(days=30),
+            subTotal=sale.subTotal,
+            descuento=sale.descuento,
+            impuestos=sale.impuestos,
+            total=sale.total,
+            estado=InvoiceStatus.pagada,
+            notas=f"Factura generada por pago de reservación #{reserva.id}",
+        )
+        db.add(invoice)
+        db.flush()
 
-    reserva.estado = ReservationStatus.completada
+        if sale.details:
+            for d in sale.details:
+                inv_detail = InvoiceDetail(
+                    invoiceId=invoice.id, descripcion=d.descripcion,
+                    cantidad=d.cantidad, precioUnitario=d.precioUnitario,
+                    descuento=d.descuento, impuesto=d.impuesto,
+                    subtotal=d.subtotal, total=d.total
+                )
+                db.add(inv_detail)
+    else:
+        invoice = existing_invoice
+
     db.commit()
     db.refresh(sale)
+    db.refresh(invoice)
 
     user = db.query(User).filter(User.id == sale.userId).first()
     host = db.query(User).filter(User.id == sale.hostId).first() if sale.hostId else None
     room_map = {room.id: room.titulo} if room else {}
 
+    sale_data = sale_to_out(sale, user=user, host=host, room_map=room_map).model_dump()
+    invoice_data = invoice_to_out(invoice, user=user, sale=sale).model_dump()
+
     return success_response(
-        data=sale_to_out(sale, user=user, host=host, room_map=room_map).model_dump(),
-        message="Venta generada desde reservación", status_code=201
+        data={"venta": sale_data, "factura": invoice_data, "sale": sale_data, "invoice": invoice_data},
+        message="Pago procesado exitosamente y factura generada.",
+        status_code=200
     )
 
 

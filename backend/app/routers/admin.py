@@ -173,11 +173,11 @@ def admin_update_status(
 ):
     res = db.query(Reservation).filter(Reservation.id == res_id).first()
     if not res:
-        raise HTTPException(status_code=404, detail="ReservaciÃ³n no encontrada")
+        raise HTTPException(status_code=404, detail="Reservación no encontrada")
 
     nuevo_estado = payload.get("estado")
     if nuevo_estado not in ["pendiente", "confirmada", "cancelada", "completada"]:
-        raise HTTPException(status_code=400, detail="Estado invÃ¡lido")
+        raise HTTPException(status_code=400, detail="Estado inválido")
 
     res.estado = ReservationStatus(nuevo_estado)
     db.commit()

@@ -82,14 +82,14 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     if not user or user.estado != "activo" or not verify_password(payload.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales invÃ¡lidas",
+            detail="Credenciales inválidas",
         )
 
     token = create_access_token(user_id=user.id, email=user.email, role=user.role)
     user_safe = UserSafe.model_validate(user)
     return success_response(
         data=AuthResponse(user=user_safe, token=token).model_dump(),
-        message="Inicio de sesiÃ³n exitoso",
+        message="Inicio de sesión exitoso",
     )
 
 
@@ -110,12 +110,12 @@ def recover_password(payload: RecoverPasswordRequest, db: Session = Depends(get_
         db.add(recovery)
         db.commit()
 
-        print(f"[MOCK-EMAIL] RecuperaciÃ³n de contraseÃ±a para {payload.email} -> token: {token}")
+        print(f"[MOCK-EMAIL] Recuperación de contraseña para {payload.email} -> token: {token}")
 
         if settings.ENV == "development":
             response_data["token"] = token
 
-    return success_response(data=response_data, message="Si el correo existe, se enviÃ³ un enlace de recuperaciÃ³n")
+    return success_response(data=response_data, message="Si el correo existe, se envió un enlace de recuperación")
 
 
 @router.post("/reset-password")
@@ -133,7 +133,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     if not recovery:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token invÃ¡lido o expirado",
+            detail="Token inválido o expirado",
         )
 
     user = db.query(User).filter(User.email == recovery.email).first()
@@ -147,7 +147,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     recovery.usado = True
     db.commit()
 
-    return success_response(message="ContraseÃ±a actualizada correctamente")
+    return success_response(message="Contraseña actualizada correctamente")
 
 
 @router.get("/me")

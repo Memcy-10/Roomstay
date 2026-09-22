@@ -61,7 +61,8 @@ const PQR = () => {
     try {
       setLoading(true);
       const result = await pqrService.getMyPqr();
-      setPqrs(result.data?.pqr || result.data || []);
+      const list = result.data?.pqrs || result.data?.pqr || (Array.isArray(result.data) ? result.data : []);
+      setPqrs(list);
     } catch (err) {
       setError(err.response?.data?.message || 'No se pudieron cargar tus PQR.');
     } finally {

@@ -47,7 +47,10 @@ def get_overview_stats(
         host_id_filter = current_user.id
 
     total_usuarios = db.query(func.count(User.id)).filter(User.estado == "activo").scalar() or 0
-    total_habitaciones = db.query(func.count(Room.id)).scalar() or 0
+    hab_q = db.query(func.count(Room.id))
+    if host_id_filter:
+        hab_q = hab_q.filter(Room.hostId == host_id_filter)
+    total_habitaciones = hab_q.scalar() or 0
 
     reservas_query = db.query(func.count(Reservation.id))
     ventas_query = db.query(func.count(Sale.id), func.coalesce(func.sum(Sale.total), 0))
@@ -226,7 +229,10 @@ def kpi_cards(
     host_id = current_user.id if current_user.role == "host" else None
 
     usuarios = db.query(func.count(User.id)).filter(User.estado == "activo").scalar() or 0
-    habitaciones = db.query(func.count(Room.id)).scalar() or 0
+    hab_q = db.query(func.count(Room.id))
+    if host_id:
+        hab_q = hab_q.filter(Room.hostId == host_id)
+    habitaciones = hab_q.scalar() or 0
 
     res_q = db.query(func.count(Reservation.id))
     if host_id:

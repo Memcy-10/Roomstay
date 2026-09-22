@@ -6,6 +6,7 @@ import { reservationsService } from '../services/reservations.service.js';
 import { useAuth } from '../hooks/useAuth.js';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
+import PaymentModal from '../components/common/PaymentModal.jsx';
 
 const RoomDetail = () => {
   const { id } = useParams();
@@ -22,6 +23,8 @@ const RoomDetail = () => {
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isCreatingReservation, setIsCreatingReservation] = useState(false);
   const [reservationSuccess, setReservationSuccess] = useState(false);
+  const [createdReservation, setCreatedReservation] = useState(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
@@ -123,7 +126,7 @@ const RoomDetail = () => {
 
     setIsCreatingReservation(true);
     try {
-      await reservationsService.createReservation({
+      const res = await reservationsService.createReservation({
         habitacionId: id,
         fechaIngreso: reservaForm.fechaIngreso,
         fechaSalida: reservaForm.fechaSalida,
@@ -131,6 +134,8 @@ const RoomDetail = () => {
         total: availabilityResult.total,
         noches: availabilityResult.noches,
       });
+      const resObj = res?.data?.reservacion || res?.data || res;
+      setCreatedReservation(resObj);
       setReservationSuccess(true);
     } catch (error) {
       setErrorMessage(
@@ -645,19 +650,56 @@ const RoomDetail = () => {
                   )}
                 </Button>
 
-                {!isAuthenticated && (
-                  <p className="mt-3 text-xs text-neutral-500 text-center">
-                    ¿No tienes cuenta?{' '}
-                    <Link to="/login" className="text-primary-600 font-medium hover:underline">
-                      Regístrate gratis
-                    </Link>
-                  </p>
+                {reservationSuccess && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl space-y-3">
+                    <div className="flex items-center gap-2 text-green-800 font-bold text-sm">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      ¡Reserva Confirmada!
+                    </div>
+                    <p className="text-xs text-neutral-600">
+                      Tu reserva ha sido registrada exitosamente. Puedes realizar el pago ahora mismo para generar tu factura oficial.
+                    </p>
+                    <div className="flex flex-col gap-2 pt-1">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => setPaymentModalOpen(true)}
+                      >
+                        💳 Realizar Pago Ahora
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate('/user/bookings')}
+                      >
+                        Ver Mis Reservaciones
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      <PaymentModal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        reservation={createdReservation || {
+          id: 'nueva',
+          habitacionTitulo: habitacion?.titulo,
+          fechaIngreso: reservaForm.fechaIngreso,
+          fechaSalida: reservaForm.fechaSalida,
+          totalNoches: availabilityResult?.noches || 1,
+          total: availabilityResult?.total || 0,
+        }}
+        onPaymentSuccess={() => {
+          setTimeout(() => navigate('/user/invoices'), 1000);
+        }}
+      />
     </div>
   );
 };

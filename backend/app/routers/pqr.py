@@ -65,9 +65,10 @@ def list_pqr(
     if current_user.role == "user":
         query = query.filter(PQR.userId == current_user.id)
     elif current_user.role == "host":
+        from app.models.room import Room
         query = query.join(Reservation, PQR.reservationId == Reservation.id, isouter=True).join(
-            User, Reservation.habitacionId != None, isouter=True
-        ).filter(or_(PQR.userId == current_user.id, False))
+            Room, Reservation.habitacionId == Room.id, isouter=True
+        ).filter(or_(PQR.userId == current_user.id, Room.hostId == current_user.id))
 
     if tipo:
         query = query.filter(PQR.tipo == tipo)
@@ -158,9 +159,6 @@ def create_pqr(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tipos_validos = [t.value for t in PQRType]
-    if payload.tipo not in tipos_validos:
-        raise HTTPException(status_code=400, detail=f"Tipo inválido. Opciones: {tipos_validos}")
 
     if payload.reservationId:
         res = db.query(Reservation).filter(Reservation.id == payload.reservationId).first()
@@ -172,9 +170,9 @@ def create_pqr(
     num_radicado = generate_radicado(db)
 
     pqr = PQR(
-        numeroRadicado=num_radicado, userId=current_user.id, tipo=PQRType(payload.tipo),
+        numeroRadicado=num_radicado, userId=current_user.id, tipo=PQRType(payload.tipo.value),
         titulo=payload.titulo, descripcion=payload.descripcion, estado=PQRStatus.pendiente,
-        prioridad=payload.prioridad, reservationId=payload.reservationId
+        prioridad=payload.prioridad.value, reservationId=payload.reservationId
     )
     db.add(pqr)
     db.commit()

@@ -57,13 +57,14 @@ def check_conflicto(
     return query.first() is not None
 
 
-def reservation_to_out(res: Reservation, room: Optional[Room] = None, user: Optional[User] = None, host: Optional[User] = None) -> ReservationOut:
+def reservation_to_out(res: Reservation, room: Optional[Room] = None, user: Optional[User] = None,
+                       host: Optional[User] = None, db: Optional[Session] = None) -> ReservationOut:
     if room is None:
         room = res.room
     if user is None:
         user = res.user
-    if host is None and room and room.hostId:
-        host = db.query(User).filter(User.id == room.hostId).first() if 'db' in globals() else None
+    if host is None and room and room.hostId and db is not None:
+        host = db.query(User).filter(User.id == room.hostId).first()
 
     return ReservationOut(
         id=res.id,

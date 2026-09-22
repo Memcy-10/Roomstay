@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { reservationsService } from '../services/reservations.service.js';
 import Button from '../components/common/Button';
+import PaymentModal from '../components/common/PaymentModal.jsx';
 
 const MyBookings = () => {
   const navigate = useNavigate();
@@ -11,6 +12,8 @@ const MyBookings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [selectedForPayment, setSelectedForPayment] = useState(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   const fetchBookings = async () => {
     setIsLoading(true);
@@ -209,10 +212,22 @@ const MyBookings = () => {
                       ${Number(booking.total).toLocaleString('es-CO')}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Button variant="outline" size="sm" onClick={() => navigate(`/rooms/${booking.habitacionId}`)}>
                       Ver Habitación
                     </Button>
+                    {booking.estado !== 'cancelada' && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedForPayment(booking);
+                          setPaymentModalOpen(true);
+                        }}
+                      >
+                        💳 Pagar Reserva
+                      </Button>
+                    )}
                     {(booking.estado === 'pendiente' || booking.estado === 'confirmada') && (
                       <Button variant="danger" size="sm" onClick={() => handleCancelBooking(booking.id)}>
                         Cancelar Reserva
@@ -225,6 +240,13 @@ const MyBookings = () => {
           ))}
         </div>
       )}
+
+      <PaymentModal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        reservation={selectedForPayment}
+        onPaymentSuccess={() => fetchBookings()}
+      />
     </div>
   );
 };

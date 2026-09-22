@@ -156,7 +156,7 @@ const Invoices = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-neutral-700 text-right font-mono">
-                      {formatCOP(toNum(inv.subtotal))}
+                      {formatCOP(toNum(inv.subtotal || inv.subTotal || inv.total))}
                     </td>
                     <td className="px-6 py-4 text-sm text-red-600 text-right font-mono">
                       -{formatCOP(toNum(inv.descuento))}
@@ -203,7 +203,7 @@ const Invoices = () => {
                 <tr>
                   <td colSpan={4} className="px-6 py-4 text-right font-semibold text-neutral-700">Totales:</td>
                   <td className="px-6 py-4 text-right font-mono font-semibold text-neutral-700">
-                    {formatCOP(invoices.reduce((s, i) => s + toNum(i.subtotal), 0))}
+                    {formatCOP(invoices.reduce((s, i) => s + toNum(i.subtotal || i.subTotal || i.total), 0))}
                   </td>
                   <td className="px-6 py-4 text-right font-mono font-semibold text-red-600">
                     -{formatCOP(invoices.reduce((s, i) => s + toNum(i.descuento), 0))}
@@ -260,7 +260,7 @@ const Invoices = () => {
                         )}
                       </div>
                       <p className="font-mono text-neutral-900 font-semibold shrink-0">
-                        {formatCOP(toNum(item.subtotal || item.total || item.valor || (toNum(item.precioUnitario) * toNum(item.cantidad))))}
+                        {formatCOP(toNum(item.subtotal || item.subTotal || item.total || item.valor || (toNum(item.precioUnitario) * toNum(item.cantidad))))}
                       </p>
                     </div>
                   ))}
@@ -271,7 +271,7 @@ const Invoices = () => {
             <div className="space-y-2 border-t border-neutral-200 pt-4">
               <div className="flex justify-between text-sm">
                 <span className="text-neutral-600">Subtotal</span>
-                <span className="font-mono text-neutral-800">{formatCOP(toNum(selectedInvoice.subtotal))}</span>
+                <span className="font-mono text-neutral-800">{formatCOP(toNum(selectedInvoice.subtotal || selectedInvoice.subTotal || selectedInvoice.total))}</span>
               </div>
               {toNum(selectedInvoice.descuento) > 0 && (
                 <div className="flex justify-between text-sm">

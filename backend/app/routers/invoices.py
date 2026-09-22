@@ -28,11 +28,12 @@ def generate_invoice_number(db: Session) -> str:
     return f"{prefix}{seq:06d}"
 
 
-def invoice_to_out(invoice: Invoice, user: Optional[User] = None, sale: Optional[Sale] = None) -> InvoiceOut:
-    if user is None:
-        user = db.query(User).filter(User.id == invoice.userId).first() if 'db' in globals() else None
-    if sale is None:
-        sale = db.query(Sale).filter(Sale.id == invoice.saleId).first() if 'db' in globals() else None
+def invoice_to_out(invoice: Invoice, user: Optional[User] = None, sale: Optional[Sale] = None,
+                   db: Optional[Session] = None) -> InvoiceOut:
+    if user is None and db is not None:
+        user = db.query(User).filter(User.id == invoice.userId).first()
+    if sale is None and db is not None:
+        sale = db.query(Sale).filter(Sale.id == invoice.saleId).first()
 
     details_out = None
     if invoice.details:
@@ -49,8 +50,11 @@ def invoice_to_out(invoice: Invoice, user: Optional[User] = None, sale: Optional
     return InvoiceOut(
         id=invoice.id, numeroFactura=invoice.numeroFactura, saleId=invoice.saleId,
         userId=invoice.userId, fechaEmision=invoice.fechaEmision,
-        fechaVencimiento=invoice.fechaVencimiento, subTotal=float(invoice.subTotal),
-        descuento=float(invoice.descuento), impuestos=float(invoice.impuestos),
+        fechaVencimiento=invoice.fechaVencimiento,
+        subTotal=float(invoice.subTotal) if invoice.subTotal else float(invoice.total),
+        subtotal=float(invoice.subTotal) if invoice.subTotal else float(invoice.total),
+        descuento=float(invoice.descuento) if invoice.descuento else 0.0,
+        impuestos=float(invoice.impuestos) if invoice.impuestos else 0.0,
         total=float(invoice.total),
         estado=invoice.estado.value if isinstance(invoice.estado, InvoiceStatus) else invoice.estado,
         notas=invoice.notas, createdAt=invoice.createdAt, updatedAt=invoice.updatedAt,

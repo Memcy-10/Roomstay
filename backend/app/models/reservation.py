@@ -7,6 +7,7 @@ import enum
 class ReservationStatus(str, enum.Enum):
     pendiente = "pendiente"
     confirmada = "confirmada"
+    pagada = "pagada"
     cancelada = "cancelada"
     completada = "completada"
 

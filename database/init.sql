@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS reservaciones (
   precioNoche    DECIMAL(12,2) NOT NULL,
   totalNoches    INT UNSIGNED NOT NULL,
   total          DECIMAL(12,2) NOT NULL,
-  estado         ENUM('pendiente', 'confirmada', 'cancelada', 'completada') DEFAULT 'confirmada',
+  estado         ENUM('pendiente', 'confirmada', 'pagada', 'cancelada', 'completada') DEFAULT 'pendiente',
   notas          VARCHAR(500) NULL,
   createdAt      DATETIME     DEFAULT CURRENT_TIMESTAMP,
   updatedAt      DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -289,7 +289,7 @@ VALUES (
   'Calle 123 #45-67, Bogotá',
   '3001234567',
   'admin@roomstay.com',
-  '$2b$10$Iyh2rNxK4BSzFiHgdPC6Veao54EEQZML4ElEqPFICUN8WKbPm2mNa',
+  '$2b$10$0BCsC9JcPLHSely4YRnjWuuPttilqxRFlMPwMwOlKwieyvgUL3gyC',
   'admin'
 );
 
@@ -302,7 +302,7 @@ VALUES (
   'Carrera 45 #12-30, Medellín',
   '3109876543',
   'usuario@roomstay.com',
-  '$2b$10$jmpXK8Vek5AUeZ.jXk100uCbwSFEZsnNtU0lmhOpQNLR8Zc3q.uZy',
+  '$2b$10$f11isojrFzJONej4/esQm.W7Zww7C3agwet76oQIAR9hJNRW.apN.',
   'user'
 );
 
@@ -315,7 +315,7 @@ VALUES (
   'Avenida 6 #23-10, Cali',
   '3201122334',
   'hospedador@roomstay.com',
-  '$2b$10$CBQB9/SYPGOjJn4o39T3YuHMwwsFj14XHhKPJWJmbbWPSmWNll.Bm',
+  '$2b$10$S7xsUNdjwFknPIzbrRPd4eMpSE8Pj4kAsSyYakAstSmUKAd1i0HK.',
   'host'
 );
 

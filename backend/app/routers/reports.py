@@ -275,12 +275,9 @@ def daily_sales_pdf(
     current_user: User = Depends(require_host_or_admin),
     db: Session = Depends(get_db),
 ):
-    report_resp = daily_sales_report(fecha=fecha, current_user=current_user, db=db)
-    from fastapi.encoders import jsonable_encoder
-    report_data = jsonable_encoder(report_resp.body)
     import json
-    if isinstance(report_data, bytes):
-        report_data = json.loads(report_data.decode("utf-8"))
+    report_resp = daily_sales_report(fecha=fecha, current_user=current_user, db=db)
+    report_data = json.loads(report_resp.body)
     data = report_data.get("data", report_data)
     try:
         buffer = _generar_pdf_reporte_ventas(data)
@@ -293,7 +290,7 @@ def daily_sales_pdf(
     return StreamingResponse(
         buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'inline; filename="{fname}"'}
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'}
     )
 
 
@@ -303,12 +300,9 @@ def daily_sales_excel(
     current_user: User = Depends(require_host_or_admin),
     db: Session = Depends(get_db),
 ):
-    report_resp = daily_sales_report(fecha=fecha, current_user=current_user, db=db)
-    from fastapi.encoders import jsonable_encoder
-    report_data = jsonable_encoder(report_resp.body)
     import json
-    if isinstance(report_data, bytes):
-        report_data = json.loads(report_data.decode("utf-8"))
+    report_resp = daily_sales_report(fecha=fecha, current_user=current_user, db=db)
+    report_data = json.loads(report_resp.body)
     data = report_data.get("data", report_data)
     try:
         buffer = _generar_excel_reporte_ventas(data)

@@ -35,6 +35,7 @@ class InvoiceOut(BaseSchema):
     fechaEmision: Optional[date] = None
     fechaVencimiento: Optional[date] = None
     subTotal: Optional[float] = None
+    subtotal: Optional[float] = None
     descuento: Optional[float] = None
     impuestos: Optional[float] = None
     total: Optional[float] = None

@@ -35,6 +35,7 @@ const Header = () => {
 
   const navItems = [
     { to: '/', label: 'Inicio' },
+    { to: '/rooms', label: 'Catálogo' },
     { to: '/about', label: '¿Quiénes Somos?' },
     { to: '/contact', label: 'Contacto' },
   ];

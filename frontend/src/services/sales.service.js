@@ -31,6 +31,11 @@ export const salesService = {
     return response.data;
   },
 
+  async payReservation(reservationId, metodoPago = 'tarjeta') {
+    const response = await apiClient.post(`/sales/pay-reservation/${reservationId}?metodoPago=${encodeURIComponent(metodoPago)}`);
+    return response.data;
+  },
+
   async updateStatus(id, estado) {
     const response = await apiClient.patch(`/sales/${id}/status`, { estado });
     return response.data;

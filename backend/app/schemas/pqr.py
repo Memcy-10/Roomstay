@@ -2,15 +2,28 @@ from datetime import datetime
 from typing import Optional
 from typing_extensions import Annotated
 from pydantic import BaseModel, Field
+from enum import Enum
 
 from app.schemas.common import BaseSchema
 
 
+class PQRTypeEnum(str, Enum):
+    peticion = "peticion"
+    queja = "queja"
+    reclamo = "reclamo"
+    sugerencia = "sugerencia"
+
+class PQRPriorityEnum(str, Enum):
+    alta = "alta"
+    media = "media"
+    baja = "baja"
+
+
 class PQRCreate(BaseModel):
-    tipo: str
+    tipo: PQRTypeEnum
     titulo: Annotated[str, Field(min_length=3, max_length=150)]
     descripcion: Annotated[str, Field(min_length=10)]
-    prioridad: str = "media"
+    prioridad: PQRPriorityEnum = PQRPriorityEnum.media
     reservationId: Optional[int] = None
 
 
