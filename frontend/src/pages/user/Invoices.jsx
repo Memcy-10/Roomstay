@@ -42,6 +42,7 @@ const Invoices = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [downloadingId, setDownloadingId] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [search, setSearch] = useState('');
 
   const loadInvoices = async () => {
     try {
@@ -84,6 +85,10 @@ const Invoices = () => {
   };
 
   const toNum = (v) => Number(v) || 0;
+  const visibleInvoices = invoices.filter((invoice) =>
+    `${invoice.numeroFactura || ''} ${invoice.numeroVenta || ''} ${invoice.estado || ''}`
+      .toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="container-app space-y-6">
@@ -99,10 +104,11 @@ const Invoices = () => {
           <button type="button" className="ml-3 underline" onClick={() => setError('')}>Cerrar</button>
         </div>
       )}
+      <div className="card p-4"><input className="input-field" placeholder="Buscar factura, venta o estado..." value={search} onChange={(e) => setSearch(e.target.value)} /></div>
 
       {loading ? (
         <div className="card p-8 text-center text-neutral-500">Cargando facturas...</div>
-      ) : invoices.length === 0 ? (
+      ) : visibleInvoices.length === 0 ? (
         <div className="card p-12 text-center">
           <div className="mx-auto w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mb-5">
             <svg className="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,7 +145,7 @@ const Invoices = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {invoices.map((inv) => (
+                {visibleInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-6 py-4 font-mono text-sm font-semibold text-neutral-900">
                       {inv.numeroFactura || `FAC-${inv.id}`}

@@ -26,6 +26,7 @@ const HostSales = () => {
     fechaFin: '',
     estado: '',
     numeroVenta: '',
+    cliente: '',
   });
 
   const [detailOpen, setDetailOpen] = useState(false);
@@ -42,12 +43,14 @@ const HostSales = () => {
       if (filters.numeroVenta) params.numeroVenta = filters.numeroVenta;
       const result = await salesService.getSales(params);
       const list = result.data?.ventas || result.data || [];
-      setSales(
-        filters.numeroVenta
-          ? list.filter((s) =>
-              String(s.numeroVenta || s.id).toLowerCase().includes(filters.numeroVenta.toLowerCase())
-            )
-          : list
+      const numberTerm = filters.numeroVenta.toLowerCase();
+      const clientTerm = filters.cliente.toLowerCase();
+      setSales(numberTerm || clientTerm
+        ? list.filter((s) => {
+          const value = `${s.numeroVenta || s.id} ${s.userFirstName || ''} ${s.userLastName || ''} ${s.userEmail || ''}`.toLowerCase();
+          return (!numberTerm || value.includes(numberTerm)) && (!clientTerm || value.includes(clientTerm));
+        })
+        : list
       );
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'No se pudieron cargar las ventas.');
@@ -58,7 +61,7 @@ const HostSales = () => {
 
   useEffect(() => {
     loadSales();
-  }, [filters.fechaInicio, filters.fechaFin, filters.estado, filters.numeroVenta]);
+  }, [filters.fechaInicio, filters.fechaFin, filters.estado, filters.numeroVenta, filters.cliente]);
 
   const handleViewDetail = async (sale) => {
     try {
@@ -91,6 +94,10 @@ const HostSales = () => {
               value={filters.fechaInicio}
               onChange={(e) => setFilters((f) => ({ ...f, fechaInicio: e.target.value }))}
             />
+          </div>
+          <div>
+            <label className="label-field">Buscar cliente</label>
+            <input type="text" className="input-field" placeholder="Nombre o correo..." value={filters.cliente} onChange={(e) => setFilters((f) => ({ ...f, cliente: e.target.value }))} />
           </div>
           <div>
             <label className="label-field">Fecha fin</label>

@@ -8,6 +8,7 @@ const UserBookings = () => {
   const [error, setError] = useState('');
   const [selectedForPayment, setSelectedForPayment] = useState(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
   const loadReservations = async () => {
     try {
@@ -40,6 +41,10 @@ const UserBookings = () => {
   const handlePaymentSuccess = () => {
     loadReservations();
   };
+  const visibleReservations = reservations.filter((reservation) =>
+    `${reservation.habitacionTitulo || ''} ${reservation.habitacionUbicacion || ''} ${reservation.estado || ''} ${reservation.id}`
+      .toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="container-app space-y-6">
@@ -49,13 +54,14 @@ const UserBookings = () => {
         <p className="mt-2 text-neutral-600">Consulta y administra tus próximas estadías y realiza el pago de tus reservas.</p>
       </header>
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
+      <div className="card p-4"><input className="input-field" placeholder="Buscar por hospedaje, ubicación, estado o número..." value={search} onChange={(e) => setSearch(e.target.value)} /></div>
       {loading ? (
         <div className="card p-6 text-neutral-500">Cargando reservas...</div>
-      ) : reservations.length === 0 ? (
+      ) : visibleReservations.length === 0 ? (
         <div className="card p-8 text-center text-neutral-600">No tienes reservaciones todavía.</div>
       ) : (
         <div className="space-y-4">
-          {reservations.map((reservation) => (
+          {visibleReservations.map((reservation) => (
             <article key={reservation.id} className="card flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between border border-neutral-200 hover:shadow-sm transition-shadow">
               <div>
                 <h2 className="font-semibold text-neutral-900 text-lg">{reservation.habitacionTitulo || `Reserva #${reservation.id}`}</h2>
