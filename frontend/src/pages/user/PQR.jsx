@@ -89,8 +89,18 @@ const PQR = () => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
-    if (!formData.titulo.trim() || !formData.descripcion.trim()) {
+    const titulo = formData.titulo.trim();
+    const descripcion = formData.descripcion.trim();
+    if (!titulo || !descripcion) {
       setError('Por favor completa el título y la descripción.');
+      return;
+    }
+    if (titulo.length < 3) {
+      setError('El título debe tener al menos 3 caracteres.');
+      return;
+    }
+    if (descripcion.length < 10) {
+      setError('La descripción debe tener al menos 10 caracteres.');
       return;
     }
     try {
@@ -98,8 +108,8 @@ const PQR = () => {
       const payload = {
         tipo: formData.tipo,
         prioridad: formData.prioridad,
-        titulo: formData.titulo.trim(),
-        descripcion: formData.descripcion.trim(),
+        titulo,
+        descripcion,
       };
       if (formData.reservationId && !isNaN(Number(formData.reservationId))) {
         payload.reservationId = Number(formData.reservationId);
@@ -118,7 +128,11 @@ const PQR = () => {
         setActiveTab('list');
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'No se pudo crear la PQR.');
+      const validationErrors = err.response?.data?.errors;
+      const validationMessage = validationErrors
+        ? Object.entries(validationErrors).map(([field, message]) => `${field}: ${message}`).join(' ')
+        : null;
+      setError(validationMessage || err.response?.data?.message || 'No se pudo crear la PQR.');
     } finally {
       setSubmitting(false);
     }

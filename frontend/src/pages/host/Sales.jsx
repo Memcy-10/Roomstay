@@ -202,7 +202,7 @@ const HostSales = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
-                  {(saleDetail.items || saleDetail.detalles || []).map((it, idx) => {
+                  {(saleDetail.details || saleDetail.items || saleDetail.detalles || []).map((it, idx) => {
                     const cantidad = it.cantidad || 1;
                     const precio = it.precio || it.precioUnitario || 0;
                     const subtotal = it.subtotal || (cantidad * precio);

@@ -287,7 +287,7 @@ const AdminSales = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
-                  {(saleDetail.items || saleDetail.detalles || []).map((it, idx) => (
+                  {(saleDetail.details || saleDetail.items || saleDetail.detalles || []).map((it, idx) => (
                     <tr key={it.id || idx}>
                       <td className="p-2">{it.descripcion || it.producto || it.habitacionTitulo || `Ítem ${idx + 1}`}</td>
                       <td className="p-2 text-right">{it.cantidad || 1}</td>
