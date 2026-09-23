@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import Modal from '../../components/common/Modal.jsx';
 import { invoicesService } from '../../services/invoices.service.js';
 
@@ -26,6 +26,7 @@ const HostInvoices = () => {
     fechaFin: '',
     estado: '',
     numero: '',
+    buscar: '',
   });
 
   const [detailOpen, setDetailOpen] = useState(false);

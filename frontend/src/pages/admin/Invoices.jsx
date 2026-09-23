@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import Modal from '../../components/common/Modal.jsx';
 import { invoicesService } from '../../services/invoices.service.js';
 import { salesService } from '../../services/sales.service.js';
@@ -28,6 +28,7 @@ const AdminInvoices = () => {
     fechaFin: '',
     estado: '',
     numero: '',
+    buscar: '',
   });
 
   const [detailOpen, setDetailOpen] = useState(false);
@@ -53,7 +54,9 @@ const AdminInvoices = () => {
       if (filters.estado) params.estado = filters.estado;
       if (filters.numero) params.numero = filters.numero;
       const result = await invoicesService.getInvoices(params);
-      setInvoices(result.data?.facturas || result.data || []);
+      const list = result.data?.facturas || result.data || [];
+      const term = filters.numero.toLowerCase();
+      setInvoices(term ? list.filter((inv) => `${inv.numeroFactura || ''} ${inv.numeroVenta || ''} ${inv.userFirstName || ''} ${inv.userLastName || ''} ${inv.userEmail || ''}`.toLowerCase().includes(term)) : list);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'No se pudieron cargar las facturas.');
     } finally {

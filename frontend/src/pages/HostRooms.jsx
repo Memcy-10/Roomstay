@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { roomsService } from '../services/rooms.service.js';
@@ -10,7 +10,9 @@ const HostRooms = () => {
   const [rooms, setRooms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const visibleRooms = rooms.filter((room) => `${room.titulo || ''} ${room.ubicacion || ''} ${room.tipo || ''}`.toLowerCase().includes(search.toLowerCase()));
 
   const fetchMyRooms = async () => {
     setIsLoading(true);
@@ -112,7 +114,7 @@ const HostRooms = () => {
         </div>
       )}
 
-      {error && (
+      <div className="card p-4 mb-6"><input className="input-field" placeholder="Buscar por nombre, ubicación o tipo..." value={search} onChange={(e) => setSearch(e.target.value)} /></div>{error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 flex items-start gap-3">
           <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -145,7 +147,7 @@ const HostRooms = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rooms.map((room) => (
+          {visibleRooms.map((room) => (
             <article key={room.id} className="card overflow-hidden group hover:shadow-card-hover transition-all duration-300 flex flex-col justify-between">
               <div>
                 <div className="relative aspect-[4/3] overflow-hidden">
