@@ -2,7 +2,7 @@ import apiClient from './apiClient.js';
 
 export const reservationsService = {
   async createReservation(payload) {
-    const response = await apiClient.post('/reservations', payload);
+    const response = await apiClient.post('/reservations/', payload);
     return response.data;
   },
 

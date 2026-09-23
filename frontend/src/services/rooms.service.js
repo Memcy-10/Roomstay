@@ -9,7 +9,7 @@ export const roomsService = {
       }
     });
     const queryString = params.toString();
-    const response = await apiClient.get(`/rooms${queryString ? `?${queryString}` : ''}`);
+    const response = await apiClient.get(`/rooms/${queryString ? `?${queryString}` : ''}`);
     return response.data;
   },
 
@@ -24,7 +24,7 @@ export const roomsService = {
   },
 
   async createRoom(roomData) {
-    const response = await apiClient.post('/rooms', roomData);
+    const response = await apiClient.post('/rooms/', roomData);
     return response.data;
   },
 

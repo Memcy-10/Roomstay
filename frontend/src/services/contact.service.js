@@ -2,12 +2,12 @@ import apiClient from './apiClient.js';
 
 export const contactService = {
   async sendMessage(messageData) {
-    const response = await apiClient.post('/contact', messageData);
+    const response = await apiClient.post('/contact/', messageData);
     return response.data;
   },
 
   async getAll() {
-    const response = await apiClient.get('/contact');
+    const response = await apiClient.get('/contact/');
     return response.data;
   },
 
