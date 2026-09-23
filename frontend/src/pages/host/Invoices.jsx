@@ -40,16 +40,12 @@ const HostInvoices = () => {
       if (filters.fechaInicio) params.fechaInicio = filters.fechaInicio;
       if (filters.fechaFin) params.fechaFin = filters.fechaFin;
       if (filters.estado) params.estado = filters.estado;
-      if (filters.numero) params.numero = filters.numero;
       const result = await invoicesService.getInvoices(params);
       const list = result.data?.facturas || result.data || [];
-      setInvoices(
-        filters.numero
-          ? list.filter((inv) =>
-              String(inv.numeroFactura || inv.id).toLowerCase().includes(filters.numero.toLowerCase())
-            )
-          : list
-      );
+      const term = filters.buscar.toLowerCase().trim();
+      setInvoices(term
+        ? list.filter((inv) => `${inv.numeroFactura || ''} ${inv.numeroVenta || ''} ${inv.userFirstName || ''} ${inv.userLastName || ''} ${inv.userEmail || ''} ${inv.estado || ''}`.toLowerCase().includes(term))
+        : list);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'No se pudieron cargar las facturas.');
     } finally {
@@ -59,7 +55,7 @@ const HostInvoices = () => {
 
   useEffect(() => {
     loadInvoices();
-  }, [filters.fechaInicio, filters.fechaFin, filters.estado, filters.numero]);
+  }, [filters.fechaInicio, filters.fechaFin, filters.estado, filters.buscar]);
 
   const handleViewDetail = async (invoice) => {
     try {
@@ -127,9 +123,9 @@ const HostInvoices = () => {
             <input
               type="text"
               className="input-field"
-              placeholder="Buscar por número..."
-              value={filters.numero}
-              onChange={(e) => setFilters((f) => ({ ...f, numero: e.target.value }))}
+              placeholder="Factura, venta, cliente o correo..."
+              value={filters.buscar}
+              onChange={(e) => setFilters((f) => ({ ...f, buscar: e.target.value }))}
             />
           </div>
         </div>
