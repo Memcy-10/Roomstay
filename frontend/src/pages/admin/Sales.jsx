@@ -21,6 +21,7 @@ const ESTADOS_VENTA = ['pendiente', 'completada', 'cancelada', 'reembolsada'];
 
 const AdminSales = () => {
   const [sales, setSales] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reservations, setReservations] = useState([]);
@@ -76,6 +77,7 @@ const AdminSales = () => {
   useEffect(() => {
     loadSales();
     loadReservations();
+    invoicesService.getInvoices().then((result) => setInvoices(result.data?.facturas || result.data || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -128,7 +130,8 @@ const AdminSales = () => {
 
   const handleCreateInvoice = async (sale) => {
     try {
-      await invoicesService.createInvoice({ ventaId: sale.id, notas: 'Factura generada desde venta.' });
+      const result = await invoicesService.createInvoice({ ventaId: sale.id, notas: 'Factura generada desde venta.' });
+      setInvoices((current) => [...current, result.data || result]);
       alert('Factura creada correctamente.');
     } catch (requestError) {
       alert('Error al crear factura: ' + (requestError.response?.data?.message || requestError.message));
@@ -249,8 +252,8 @@ const AdminSales = () => {
                         <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => handleViewDetail(s)}>
                           Ver detalle
                         </button>
-                        <button type="button" className="btn-secondary !py-1.5 !px-3 text-xs" onClick={() => handleCreateInvoice(s)}>
-                          Crear factura
+                        <button type="button" className="btn-secondary !py-1.5 !px-3 text-xs" onClick={() => handleCreateInvoice(s)} disabled={invoices.some((invoice) => invoice.saleId === s.id)}>
+                          {invoices.some((invoice) => invoice.saleId === s.id) ? 'Ya facturada' : 'Crear factura'}
                         </button>
                         <button type="button" className="btn-primary !py-1.5 !px-3 text-xs" onClick={() => handleChangeStatus(s)}>
                           Cambiar estado

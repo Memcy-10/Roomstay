@@ -18,6 +18,7 @@ const RoomsList = () => {
     minPrecio: '',
     maxPrecio: '',
     ubicacion: '',
+    busqueda: '',
   });
 
   useEffect(() => {
@@ -74,6 +75,13 @@ const RoomsList = () => {
         result = result.filter((h) => h.ubicacion.toLowerCase().includes(loc));
       }
 
+      if (filters.busqueda) {
+        const term = filters.busqueda.toLowerCase();
+        result = result.filter((h) =>
+          `${h.titulo || ''} ${h.descripcion || ''} ${h.ubicacion || ''}`.toLowerCase().includes(term)
+        );
+      }
+
       setFilteredHabitaciones(result);
     };
 
@@ -86,6 +94,7 @@ const RoomsList = () => {
       minPrecio: '',
       maxPrecio: '',
       ubicacion: '',
+      busqueda: '',
     });
   };
 
@@ -110,6 +119,14 @@ const RoomsList = () => {
             </Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Input
+              label="Buscar alojamiento"
+              name="busqueda"
+              type="text"
+              value={filters.busqueda}
+              onChange={handleFilterChange}
+              placeholder="Nombre o descripción"
+            />
             <Select
               label="Tipo de habitación"
               name="tipo"
