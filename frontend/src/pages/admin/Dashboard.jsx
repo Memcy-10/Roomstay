@@ -18,7 +18,7 @@ const AdminDashboard = () => {
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0]);
-  const [filters, setFilters] = useState({ fechaInicio: '', fechaFin: '', producto: '', servicio: '', estado: '', cliente: '' });
+  const [filters, setFilters] = useState({ fechaInicio: '', fechaFin: '', servicio: '', estado: '', cliente: '' });
 
   useEffect(() => {
     Promise.allSettled([statsService.getKpiCards(filters), statsService.getOverview(filters)])
@@ -60,7 +60,6 @@ const AdminDashboard = () => {
             {[
               ['fechaInicio', 'Fecha inicial', 'date'],
               ['fechaFin', 'Fecha final', 'date'],
-              ['producto', 'Producto', 'text'],
               ['servicio', 'Servicio', 'text'],
               ['estado', 'Estado', 'text'],
               ['cliente', 'Cliente', 'text'],

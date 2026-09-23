@@ -33,7 +33,6 @@ def _safe_float(v) -> float:
 def get_overview_stats(
     fechaInicio: Optional[date] = Query(None),
     fechaFin: Optional[date] = Query(None),
-    producto: Optional[str] = Query(None),
     servicio: Optional[str] = Query(None),
     estado: Optional[str] = Query(None),
     cliente: Optional[str] = Query(None),
@@ -51,10 +50,8 @@ def get_overview_stats(
         host_id_filter = current_user.id
 
     sale_filter_ids = None
-    if producto or servicio or cliente:
+    if servicio or cliente:
         detail_q = db.query(SaleDetail.saleId).join(Sale, SaleDetail.saleId == Sale.id)
-        if producto:
-            detail_q = detail_q.filter(SaleDetail.descripcion.like(f"%{producto}%"))
         if servicio:
             detail_q = detail_q.filter(SaleDetail.tipo == servicio)
         if cliente:
@@ -151,6 +148,10 @@ def get_overview_stats(
     )
     if host_id_filter:
         ventas_diarias = ventas_diarias.filter(Sale.hostId == host_id_filter)
+    if estado:
+        ventas_diarias = ventas_diarias.filter(Sale.estado == estado)
+    if sale_filter_ids is not None:
+        ventas_diarias = ventas_diarias.filter(Sale.id.in_(sale_filter_ids or [-1]))
     ventas_diarias = ventas_diarias.group_by(Sale.fechaVenta).order_by(Sale.fechaVenta).all()
 
     sales_map = {str(d): _safe_float(v) for d, v in ventas_diarias}
@@ -169,6 +170,10 @@ def get_overview_stats(
         )
         if host_id_filter:
             q = q.filter(Sale.hostId == host_id_filter)
+        if estado:
+            q = q.filter(Sale.estado == estado)
+        if sale_filter_ids is not None:
+            q = q.filter(Sale.id.in_(sale_filter_ids or [-1]))
         semanal.append({"label": f"S{4 - i}", "value": _safe_float(q.scalar())})
     semanal.reverse()
 
@@ -184,6 +189,10 @@ def get_overview_stats(
         )
         if host_id_filter:
             q = q.filter(Sale.hostId == host_id_filter)
+        if estado:
+            q = q.filter(Sale.estado == estado)
+        if sale_filter_ids is not None:
+            q = q.filter(Sale.id.in_(sale_filter_ids or [-1]))
         mensual.append({"label": m_start.strftime("%b"), "value": _safe_float(q.scalar())})
 
     ventas_periodo = {"diario": diario, "semanal": semanal, "mensual": mensual}
@@ -249,6 +258,7 @@ def get_overview_stats(
 def kpi_cards(
     fechaInicio: Optional[date] = Query(None),
     fechaFin: Optional[date] = Query(None),
+    servicio: Optional[str] = Query(None),
     estado: Optional[str] = Query(None),
     cliente: Optional[str] = Query(None),
     current_user: User = Depends(require_host_or_admin),
@@ -283,10 +293,8 @@ def kpi_cards(
             (User.email.like(f"%{cliente}%"))
         ).all()]
         v_q = v_q.filter(Sale.userId.in_(client_ids or [-1]))
-    if producto or servicio:
+    if servicio:
         detail_q = db.query(SaleDetail.saleId)
-        if producto:
-            detail_q = detail_q.filter(SaleDetail.descripcion.like(f"%{producto}%"))
         if servicio:
             detail_q = detail_q.filter(SaleDetail.tipo == servicio)
         v_q = v_q.filter(Sale.id.in_([row[0] for row in detail_q.distinct().all()] or [-1]))
