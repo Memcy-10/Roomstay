@@ -33,6 +33,10 @@ def _safe_float(v) -> float:
 def get_overview_stats(
     fechaInicio: Optional[date] = Query(None),
     fechaFin: Optional[date] = Query(None),
+    producto: Optional[str] = Query(None),
+    servicio: Optional[str] = Query(None),
+    estado: Optional[str] = Query(None),
+    cliente: Optional[str] = Query(None),
     current_user: User = Depends(require_host_or_admin),
     db: Session = Depends(get_db),
 ):
@@ -45,6 +49,22 @@ def get_overview_stats(
     host_id_filter = None
     if current_user.role == "host":
         host_id_filter = current_user.id
+
+    sale_filter_ids = None
+    if producto or servicio or cliente:
+        detail_q = db.query(SaleDetail.saleId).join(Sale, SaleDetail.saleId == Sale.id)
+        if producto:
+            detail_q = detail_q.filter(SaleDetail.descripcion.like(f"%{producto}%"))
+        if servicio:
+            detail_q = detail_q.filter(SaleDetail.tipo == servicio)
+        if cliente:
+            client_ids = [u.id for u in db.query(User.id).filter(
+                (User.firstName.like(f"%{cliente}%")) |
+                (User.lastName.like(f"%{cliente}%")) |
+                (User.email.like(f"%{cliente}%"))
+            ).all()]
+            detail_q = detail_q.filter(Sale.userId.in_(client_ids or [-1]))
+        sale_filter_ids = [row[0] for row in detail_q.distinct().all()]
 
     total_usuarios = db.query(func.count(User.id)).filter(User.estado == "activo").scalar() or 0
     hab_q = db.query(func.count(Room.id))
@@ -60,6 +80,10 @@ def get_overview_stats(
         reservas_query = reservas_query.join(Room, Reservation.habitacionId == Room.id).filter(Room.hostId == host_id_filter)
         ventas_query = ventas_query.filter(Sale.hostId == host_id_filter)
         facturacion_query = facturacion_query.join(Sale, Invoice.saleId == Sale.id).filter(Sale.hostId == host_id_filter)
+    if estado:
+        ventas_query = ventas_query.filter(Sale.estado == estado)
+    if sale_filter_ids is not None:
+        ventas_query = ventas_query.filter(Sale.id.in_(sale_filter_ids or [-1]))
 
     reservas_rango = reservas_query.filter(
         Reservation.createdAt >= datetime.combine(fechaInicio, datetime.min.time()),
@@ -223,6 +247,10 @@ def get_overview_stats(
 
 @router.get("/kpi-cards")
 def kpi_cards(
+    fechaInicio: Optional[date] = Query(None),
+    fechaFin: Optional[date] = Query(None),
+    estado: Optional[str] = Query(None),
+    cliente: Optional[str] = Query(None),
     current_user: User = Depends(require_host_or_admin),
     db: Session = Depends(get_db),
 ):
@@ -242,6 +270,19 @@ def kpi_cards(
     v_q = db.query(func.count(Sale.id), func.coalesce(func.sum(Sale.total), 0))
     if host_id:
         v_q = v_q.filter(Sale.hostId == host_id)
+    if fechaInicio:
+        v_q = v_q.filter(Sale.fechaVenta >= fechaInicio)
+    if fechaFin:
+        v_q = v_q.filter(Sale.fechaVenta <= fechaFin)
+    if estado:
+        v_q = v_q.filter(Sale.estado == estado)
+    if cliente:
+        client_ids = [u.id for u in db.query(User.id).filter(
+            (User.firstName.like(f"%{cliente}%")) |
+            (User.lastName.like(f"%{cliente}%")) |
+            (User.email.like(f"%{cliente}%"))
+        ).all()]
+        v_q = v_q.filter(Sale.userId.in_(client_ids or [-1]))
     total_ventas_count, total_facturacion = v_q.first() or (0, 0)
     total_ventas_count = total_ventas_count or 0
     total_facturacion = _safe_float(total_facturacion)

@@ -18,16 +18,17 @@ const AdminDashboard = () => {
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0]);
+  const [filters, setFilters] = useState({ fechaInicio: '', fechaFin: '', producto: '', servicio: '', estado: '', cliente: '' });
 
   useEffect(() => {
-    Promise.allSettled([statsService.getKpiCards(), statsService.getOverview()])
+    Promise.allSettled([statsService.getKpiCards(filters), statsService.getOverview(filters)])
       .then(([kpiRes, ovRes]) => {
         if (kpiRes.status === 'fulfilled') setKpis(kpiRes.value?.data || {});
         if (ovRes.status === 'fulfilled') setOverview(ovRes.value?.data || null);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [filters]);
 
   const cards = [
     ['Usuarios', kpis?.usuarios ?? 0, '/admin/users', 'text-primary-600', 'bg-primary-50'],
@@ -53,6 +54,24 @@ const AdminDashboard = () => {
       </header>
 
       <section>
+        <div className="card p-5 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Filtros del dashboard</h2>
+          <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
+            {[
+              ['fechaInicio', 'Fecha inicial', 'date'],
+              ['fechaFin', 'Fecha final', 'date'],
+              ['producto', 'Producto', 'text'],
+              ['servicio', 'Servicio', 'text'],
+              ['estado', 'Estado', 'text'],
+              ['cliente', 'Cliente', 'text'],
+            ].map(([key, label, type]) => (
+              <label key={key} className="text-sm font-medium">
+                {label}
+                <input type={type} className="input-field mt-1" value={filters[key]} onChange={(e) => setFilters((current) => ({ ...current, [key]: e.target.value }))} />
+              </label>
+            ))}
+          </div>
+        </div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-neutral-900">Indicadores clave</h2>
         </div>

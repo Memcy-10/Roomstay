@@ -1,17 +1,22 @@
 import apiClient, { API_BASE_URL, getToken } from './apiClient.js';
 
 export const statsService = {
-  async getOverview(fechaInicio, fechaFin) {
+  async getOverview(filters = {}) {
     const params = new URLSearchParams();
-    if (fechaInicio) params.append('fechaInicio', fechaInicio);
-    if (fechaFin) params.append('fechaFin', fechaFin);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.append(key, value);
+    });
     const qs = params.toString();
     const response = await apiClient.get('/stats/overview' + (qs ? `?${qs}` : ''));
     return response.data;
   },
 
-  async getKpiCards() {
-    const response = await apiClient.get('/stats/kpi-cards');
+  async getKpiCards(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.append(key, value);
+    });
+    const response = await apiClient.get(`/stats/kpi-cards${params.toString() ? `?${params}` : ''}`);
     return response.data;
   },
 };
