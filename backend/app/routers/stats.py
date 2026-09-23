@@ -37,8 +37,6 @@ def get_overview_stats(
     servicio: Optional[str] = Query(None),
     estado: Optional[str] = Query(None),
     cliente: Optional[str] = Query(None),
-    producto: Optional[str] = Query(None),
-    servicio: Optional[str] = Query(None),
     current_user: User = Depends(require_host_or_admin),
     db: Session = Depends(get_db),
 ):
