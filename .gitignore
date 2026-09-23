@@ -1,12 +1,15 @@
 # Keep only the application services in the repository
 /*
 !/.gitignore
+!/README.md
 !/frontend/
 !/frontend/**
 !/backend/
 !/backend/**
 !/database/
 !/database/**
+!/postman/
+!/postman/**
 
 # Dependencies and local Python environments
 node_modules/
