@@ -37,6 +37,8 @@ def get_overview_stats(
     servicio: Optional[str] = Query(None),
     estado: Optional[str] = Query(None),
     cliente: Optional[str] = Query(None),
+    producto: Optional[str] = Query(None),
+    servicio: Optional[str] = Query(None),
     current_user: User = Depends(require_host_or_admin),
     db: Session = Depends(get_db),
 ):
@@ -283,6 +285,13 @@ def kpi_cards(
             (User.email.like(f"%{cliente}%"))
         ).all()]
         v_q = v_q.filter(Sale.userId.in_(client_ids or [-1]))
+    if producto or servicio:
+        detail_q = db.query(SaleDetail.saleId)
+        if producto:
+            detail_q = detail_q.filter(SaleDetail.descripcion.like(f"%{producto}%"))
+        if servicio:
+            detail_q = detail_q.filter(SaleDetail.tipo == servicio)
+        v_q = v_q.filter(Sale.id.in_([row[0] for row in detail_q.distinct().all()] or [-1]))
     total_ventas_count, total_facturacion = v_q.first() or (0, 0)
     total_ventas_count = total_ventas_count or 0
     total_facturacion = _safe_float(total_facturacion)

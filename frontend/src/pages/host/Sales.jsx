@@ -120,7 +120,7 @@ const HostSales = () => {
             </select>
           </div>
           <div>
-            <label className="label-field">Buscar número de venta</label>
+            <label className="label-field">Buscar venta o cliente</label>
             <input
               type="text"
               className="input-field"

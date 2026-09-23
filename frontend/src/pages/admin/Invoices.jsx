@@ -186,7 +186,7 @@ const AdminInvoices = () => {
             </select>
           </div>
           <div>
-            <label className="label-field">Número de factura</label>
+            <label className="label-field">Buscar factura, venta o cliente</label>
             <input
               type="text"
               className="input-field"
